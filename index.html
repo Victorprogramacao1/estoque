@@ -1,0 +1,1396 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Abastecimento Hotel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow-y: auto;
+    }
+    html {
+      height: 100%;
+    }
+    .room-btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .room-btn:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    }
+    .room-btn:active {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    .counter-btn {
+      transition: all 0.15s ease;
+    }
+    .counter-btn:active {
+      transform: scale(0.95);
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .loading-spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .ai-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+      display: inline-block;
+      margin-left: 8px;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+  <div class="container mx-auto px-4 py-8 max-w-7xl"><!-- Header -->
+   <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+    <div class="flex justify-between items-start mb-4">
+     <div>
+      <h1 class="text-4xl font-bold text-indigo-900 mb-2">Gestão de Abastecimento Hotel <span class="ai-badge">🤖 IA Integrada</span></h1>
+      <p class="text-gray-600">Controle de águas e produtos por quarto com reconhecimento inteligente</p>
+      <p class="text-xs text-green-600 font-semibold mt-2">✅ Conectado ao Supabase - Dados salvos na nuvem!</p>
+     </div><button onclick="showAdminLogin()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold transition-colors flex items-center gap-2"> 🔐 Admin </button>
+    </div>
+   </div><!-- Admin Login Modal -->
+   <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+     <h2 class="text-2xl font-bold text-indigo-900 mb-6">Acesso Administrativo</h2>
+     <div class="mb-6"><label class="block text-sm font-semibold text-gray-700 mb-2">Senha</label> <input type="password" id="adminPassword" placeholder="Digite a senha" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none" onkeypress="if(event.key === 'Enter') checkAdminPassword()">
+     </div>
+     <div class="flex gap-3"><button onclick="checkAdminPassword()" class="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-colors"> Entrar </button> <button onclick="closeAdminModal()" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-bold transition-colors"> Cancelar </button>
+     </div>
+     <p id="adminError" class="text-red-500 text-sm mt-4 hidden">Senha incorreta!</p>
+    </div>
+   </div><!-- Admin Panel -->
+   <div id="adminPanel" class="bg-white rounded-2xl shadow-xl p-8 mb-8 hidden border-4 border-red-500">
+    <div class="flex justify-between items-center mb-6">
+     <div>
+      <h2 class="text-2xl font-bold text-red-600 flex items-center gap-2">🔐 Painel Administrativo</h2>
+      <p class="text-gray-600 text-sm">Gerenciar estoque, produtos e configurações</p>
+     </div><button onclick="closeAdminPanel()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"> Sair </button>
+    </div><!-- Tabs -->
+    <div class="flex gap-2 mb-6 border-b-2 border-gray-200"><button id="tabStock" onclick="switchTab('stock')" class="px-6 py-3 font-semibold border-b-4 border-red-500 text-red-600"> 📦 Gerenciar Estoque </button> <button id="tabProducts" onclick="switchTab('products')" class="px-6 py-3 font-semibold text-gray-600 hover:text-gray-800"> ➕ Cadastrar Produtos </button>
+    </div><!-- Stock Management Tab -->
+    <div id="stockTab" class="bg-red-50 rounded-xl p-6">
+     <h3 class="text-lg font-bold text-gray-800 mb-4">Ajustar Estoque</h3><!-- Text Input for Stock Adjustment -->
+     <div class="bg-white rounded-lg p-6 mb-6 border-2 border-purple-200">
+      <h4 class="font-bold text-gray-800 mb-2">💬 Ajustar Estoque por Texto <span class="ai-badge">🤖 IA</span></h4>
+      <p class="text-sm text-gray-600 mb-3">Digite de qualquer forma! A IA entende automaticamente:</p>
+      <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
+       <p class="text-sm font-semibold text-gray-800 mb-2">💡 A IA reconhece TUDO:</p>
+       <div class="space-y-2">
+        <div class="bg-white rounded-lg p-3 border-l-4 border-blue-500">
+         <p class="text-sm text-gray-700 font-medium">"20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Reconhece com ou sem acentos, pontos, vírgulas</p>
+        </div>
+        <div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+         <p class="text-sm text-gray-700 font-medium">"preciso 100 grandes 50 pequenas 25 gas"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Entende contexto sem palavras completas</p>
+        </div>
+        <div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
+         <p class="text-sm text-gray-700 font-medium">"coloca 200 de litro e meio e 80 gaseificada"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Reconhece sinônimos e variações naturais</p>
+        </div>
+       </div>
+      </div>
+      <div class="relative mb-3"><textarea id="adminChatInput" placeholder="Digite naturalmente... Ex: 20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="2" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processAdminChatInput(); }"></textarea> <button onclick="processAdminChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar com IA </button>
+      </div><!-- Admin Parsed Results -->
+      <div id="adminParsedResults" class="hidden p-4 bg-green-50 rounded-lg border-2 border-green-200">
+       <h5 class="font-bold text-green-800 mb-2">✅ IA identificou:</h5>
+       <div id="adminParsedList" class="space-y-2 mb-3"></div><button onclick="clearAdminParsedResults()" class="text-sm text-green-700 hover:text-green-900 font-semibold"> 🔄 Limpar </button>
+      </div>
+     </div>
+     <h4 class="text-lg font-bold text-gray-800 mb-4">🔢 Ajuste Manual por Botões</h4>
+     <div class="space-y-4" id="stockList"><!-- Stock items will be rendered here -->
+     </div>
+     <div class="mt-6 pt-6 border-t-2 border-red-200"><button onclick="resetAllStock()" class="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold transition-colors"> 🗑️ Zerar Todo o Estoque </button>
+     </div>
+    </div><!-- Products Management Tab -->
+    <div id="productsTab" class="hidden bg-red-50 rounded-xl p-6">
+     <h3 class="text-lg font-bold text-gray-800 mb-4">Cadastrar Novo Produto</h3>
+     <div class="bg-white rounded-lg p-6 mb-6">
+      <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Nome do Produto</label> <input type="text" id="newProductName" placeholder="Ex: Refrigerante, Suco, Toalha..." class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none">
+      </div>
+      <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Emoji/Ícone (opcional)</label> <input type="text" id="newProductEmoji" placeholder="🥤" maxlength="2" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none">
+      </div>
+      <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-2">Quantidade Inicial</label> <input type="number" id="newProductQuantity" placeholder="0" min="0" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none">
+      </div><button onclick="addNewProduct()" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-colors"> ➕ Adicionar Produto </button>
+     </div>
+     <h3 class="text-lg font-bold text-gray-800 mb-4">Produtos Cadastrados</h3>
+     <div class="space-y-3" id="productsList">
+      <p class="text-gray-500 text-center py-4">Carregando produtos...</p>
+     </div>
+    </div>
+   </div><!-- Room Selection -->
+   <div class="bg-gradient-to-br from-white via-purple-50 to-indigo-100 rounded-3xl shadow-2xl p-8 mb-8 border-2 border-indigo-200">
+    <div class="flex items-center gap-4 mb-8 pb-6 border-b-2 border-indigo-200">
+     <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg transform hover:scale-110 transition-transform">
+      🏨
+     </div>
+     <div>
+      <h2 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Selecionar Quarto</h2>
+      <p class="text-sm text-gray-600 mt-1 font-medium">✨ Clique no quarto para registrar abastecimento</p>
+     </div>
+    </div><!-- Floor 1 -->
+    <div class="mb-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-8 shadow-2xl border-2 border-blue-400 relative overflow-hidden">
+     <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
+     <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+     <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-6">
+       <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white border-opacity-30">
+        1º
+       </div>
+       <div class="flex-1">
+        <h3 class="text-2xl font-bold text-white drop-shadow-lg">Primeiro Andar</h3>
+        <p class="text-blue-100 text-sm font-medium">10 quartos disponíveis</p>
+       </div><span class="px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-white font-bold border border-white border-opacity-30">101-110</span>
+      </div>
+      <div class="grid grid-cols-5 md:grid-cols-10 gap-4" id="floor1">
+      </div>
+     </div>
+    </div><!-- Floor 2 -->
+    <div class="mb-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl p-8 shadow-2xl border-2 border-purple-400 relative overflow-hidden">
+     <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
+     <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+     <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-6">
+       <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white border-opacity-30">
+        2º
+       </div>
+       <div class="flex-1">
+        <h3 class="text-2xl font-bold text-white drop-shadow-lg">Segundo Andar</h3>
+        <p class="text-purple-100 text-sm font-medium">10 quartos disponíveis</p>
+       </div><span class="px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-white font-bold border border-white border-opacity-30">201-210</span>
+      </div>
+      <div class="grid grid-cols-5 md:grid-cols-10 gap-4" id="floor2">
+      </div>
+     </div>
+    </div><!-- Floor 3 -->
+    <div class="bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl p-8 shadow-2xl border-2 border-pink-400 relative overflow-hidden">
+     <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
+     <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+     <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-6">
+       <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-white border-opacity-30">
+        3º
+       </div>
+       <div class="flex-1">
+        <h3 class="text-2xl font-bold text-white drop-shadow-lg">Terceiro Andar</h3>
+        <p class="text-pink-100 text-sm font-medium">7 quartos disponíveis</p>
+       </div><span class="px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-white font-bold border border-white border-opacity-30">301-307</span>
+      </div>
+      <div class="grid grid-cols-5 md:grid-cols-7 gap-4" id="floor3">
+      </div>
+     </div>
+    </div>
+   </div><!-- Product Selection (Hidden by default) -->
+   <div id="productSection" class="bg-white rounded-2xl shadow-xl p-8 mb-8 hidden">
+    <div class="flex justify-between items-center mb-6">
+     <h2 class="text-2xl font-bold text-indigo-900">Quarto <span id="selectedRoom"></span></h2><button onclick="cancelSelection()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"> Cancelar </button>
+    </div><!-- Mode Toggle -->
+    <div class="flex gap-3 mb-6 p-2 bg-gray-100 rounded-lg"><button id="btnChatMode" onclick="switchMode('chat')" class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold transition-colors"> 💬 Entrada por Texto com IA </button> <button id="btnManualMode" onclick="switchMode('manual')" class="flex-1 px-4 py-3 bg-white text-gray-700 rounded-lg font-semibold transition-colors"> 🔢 Entrada Manual </button>
+    </div><!-- Chat Mode Input -->
+    <div id="chatModeSection" class="mb-6">
+     <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-4 border-2 border-purple-200">
+      <h3 class="font-bold text-gray-800 mb-2">🤖 IA: Digite de qualquer jeito!</h3>
+      <p class="text-sm text-gray-600 mb-3">Exemplos do que a IA entende:</p>
+      <ul class="text-sm text-gray-600 space-y-1 ml-4">
+       <li>• "20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas"</li>
+       <li>• "preciso 10 grandes, 5 pequenas e 3 gaseificadas"</li>
+       <li>• "coloca 15 de litro e meio e 8 com gas"</li>
+       <li>• "100 pet grande 50 pet pequena 25 sparkling"</li>
+      </ul>
+     </div>
+     <div class="relative"><textarea id="chatInput" placeholder="Digite naturalmente... A IA vai entender! Ex: 20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="3" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processChatInput(); }"></textarea> <button onclick="processChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar </button>
+     </div><!-- Parsed Results -->
+     <div id="parsedResults" class="hidden mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+      <h4 class="font-bold text-green-800 mb-2">✅ IA identificou:</h4>
+      <div id="parsedList" class="space-y-2"></div><button onclick="clearParsedResults()" class="mt-3 text-sm text-green-700 hover:text-green-900 font-semibold"> 🔄 Limpar e tentar novamente </button>
+     </div>
+    </div><!-- Manual Mode -->
+    <div id="manualModeSection" class="hidden space-y-6"><!-- Products will be dynamically rendered here -->
+    </div><!-- Operator Name -->
+    <div class="mt-6"><label class="block text-sm font-semibold text-gray-700 mb-2">Nome do Operador</label> <input type="text" id="operatorName" placeholder="Digite seu nome" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none">
+    </div><!-- Save Button --> <button id="saveBtn" onclick="saveSupply()" class="w-full mt-6 px-6 py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold text-lg transition-colors"> Registrar Abastecimento </button>
+   </div><!-- Stock Display -->
+   <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-6">Estoque Atual</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stockDisplay"><!-- Stock cards will be dynamically rendered here -->
+    </div>
+   </div><!-- History -->
+   <div class="bg-white rounded-2xl shadow-xl p-8">
+    <h2 class="text-2xl font-bold text-indigo-900 mb-6">Histórico de Abastecimentos</h2>
+    <div id="historyList" class="space-y-4">
+     <p class="text-gray-500 text-center py-8">Nenhum abastecimento registrado ainda</p>
+    </div>
+   </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ✅ CREDENCIAIS CONFIGURADAS - SUPABASE CONECTADO!
+    const SUPABASE_URL = 'https://itlyssmzrdabwvlbusiu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0bHlzc216cmRhYnd2bGJ1c2l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MjcxMzgsImV4cCI6MjA3OTMwMzEzOH0.01f9OK5W76NxY4PHmZm38QPVYiU0nHKzJHk1p0lD3OQ';
+    
+    // Inicializar cliente Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // 💾 FUNÇÕES DO SUPABASE
+    // ==========================================
+
+    // GET - Buscar produtos
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: true });
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
+        showToast('Erro ao carregar produtos. Verifique sua conexão com Supabase.', 'error');
+        return [];
+      }
+    }
+
+    // POST - Criar produto
+    async function createProduct(product) {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .insert([product])
+          .select();
+        
+        if (error) throw error;
+        return { success: true, data: data[0] };
+      } catch (error) {
+        console.error('Erro ao criar produto:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    // DELETE - Deletar produto
+    async function deleteProduct(productId) {
+      try {
+        const { error } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+        
+        if (error) throw error;
+        return { success: true };
+      } catch (error) {
+        console.error('Erro ao deletar produto:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    // GET - Buscar abastecimentos
+    async function fetchSupplies() {
+      try {
+        const { data, error } = await supabase
+          .from('supplies')
+          .select('*')
+          .order('timestamp', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Erro ao buscar abastecimentos:', error);
+        showToast('Erro ao carregar abastecimentos. Verifique sua conexão com Supabase.', 'error');
+        return [];
+      }
+    }
+
+    // POST - Criar abastecimento
+    async function createSupply(supply) {
+      try {
+        const { data, error } = await supabase
+          .from('supplies')
+          .insert([supply])
+          .select();
+        
+        if (error) throw error;
+        await refreshData();
+        return { success: true, data: data[0] };
+      } catch (error) {
+        console.error('Erro ao criar abastecimento:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    // DELETE - Deletar abastecimento
+    async function deleteSupplyById(supplyId) {
+      try {
+        const { error } = await supabase
+          .from('supplies')
+          .delete()
+          .eq('id', supplyId);
+        
+        if (error) throw error;
+        await refreshData();
+        return { success: true };
+      } catch (error) {
+        console.error('Erro ao deletar abastecimento:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    // ==========================================
+    // 📦 DADOS E ESTADO DA APLICAÇÃO
+    // ==========================================
+
+    let currentRoom = null;
+    let productCounts = {};
+    let allSupplies = [];
+    let customProducts = [];
+
+
+
+    // Atualizar dados da aplicação
+    async function refreshData() {
+      customProducts = await fetchProducts();
+      allSupplies = await fetchSupplies();
+      updateStockDisplay();
+      renderHistory();
+      if (!document.getElementById('adminPanel').classList.contains('hidden')) {
+        renderAdminStockList();
+      }
+    }
+
+    // ==========================================
+    // 🤖 PARSER DE IA
+    // ==========================================
+
+    function parseTextInput(text) {
+      const results = {};
+      customProducts.forEach(p => results[p.id] = 0);
+
+      const normalizedText = text.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[,;.]/g, ' e ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const keywords1500 = [
+        '1.5', '1,5', '15l', '1500', '1500ml', 'um e meio', 'litro e meio',
+        'grande', 'grandes', 'garrafa grande', 'garrafas grandes',
+        'pet grande', 'pets grandes', 'garrafa maior', 'maior',
+        'agua grande', 'aguas grandes', 'agua 1.5', 'agua 1,5'
+      ];
+      
+      const keywords500 = [
+        '500', '500ml', 'quinhentos', 'meio litro',
+        'pequena', 'pequenas', 'garrafa pequena', 'garrafas pequenas',
+        'pet pequena', 'pets pequenas', 'garrafa menor', 'menor',
+        'agua pequena', 'aguas pequenas', 'agua 500'
+      ];
+      
+      const keywordsGas = [
+        'gas', 'gás', 'com gas', 'comgas', 'c/ gas', 'c gas',
+        'gaseificada', 'gaseificadas', 'gasosa', 'gasosas',
+        'sparkling', 'carbonatada', 'carbonatadas',
+        'com bolhas', 'borbulhante',
+        'agua com gas', 'aguas com gas', 'agua gas', 'aguas gas'
+      ];
+
+      const segments = normalizedText.split(/\s+e\s+/);
+      
+      segments.forEach(segment => {
+        const numberMatch = segment.match(/(\d+)/);
+        if (!numberMatch) return;
+        
+        const quantity = parseInt(numberMatch[1]);
+        if (isNaN(quantity) || quantity <= 0) return;
+        
+        const hasGas = keywordsGas.some(kw => segment.includes(kw));
+        const has1500 = keywords1500.some(kw => segment.includes(kw));
+        const has500 = keywords500.some(kw => segment.includes(kw));
+        
+        if (hasGas) {
+          results['water_gas_500ml'] += quantity;
+        } else if (has1500) {
+          results['water_1500ml'] += quantity;
+        } else if (has500) {
+          results['water_500ml'] += quantity;
+        } else {
+          if (segment.includes('agua') || segment.includes('garrafa') || segment.includes('pet')) {
+            results['water_1500ml'] += quantity;
+          }
+        }
+      });
+
+      if (Object.values(results).every(v => v === 0)) {
+        const numbers = normalizedText.match(/\d+/g);
+        if (!numbers || numbers.length === 0) return results;
+        
+        const gasScore = keywordsGas.filter(kw => normalizedText.includes(kw)).length;
+        const score1500 = keywords1500.filter(kw => normalizedText.includes(kw)).length;
+        const score500 = keywords500.filter(kw => normalizedText.includes(kw)).length;
+        
+        const parsedNumbers = numbers.map(n => parseInt(n)).filter(n => n > 0);
+        
+        if (parsedNumbers.length >= 3) {
+          if (score1500 > 0) results['water_1500ml'] = parsedNumbers[0];
+          if (score500 > 0) results['water_500ml'] = parsedNumbers[1] || 0;
+          if (gasScore > 0) results['water_gas_500ml'] = parsedNumbers[2] || 0;
+          
+          if (score1500 === 0 && score500 === 0 && gasScore === 0) {
+            results['water_1500ml'] = parsedNumbers[0];
+            results['water_500ml'] = parsedNumbers[1] || 0;
+            results['water_gas_500ml'] = parsedNumbers[2] || 0;
+          }
+        } else if (parsedNumbers.length === 2) {
+          if (gasScore > 0) {
+            results['water_1500ml'] = parsedNumbers[0];
+            results['water_gas_500ml'] = parsedNumbers[1];
+          } else {
+            results['water_1500ml'] = parsedNumbers[0];
+            results['water_500ml'] = parsedNumbers[1];
+          }
+        } else if (parsedNumbers.length === 1) {
+          if (gasScore > score1500 && gasScore > score500) {
+            results['water_gas_500ml'] = parsedNumbers[0];
+          } else if (score500 > score1500) {
+            results['water_500ml'] = parsedNumbers[0];
+          } else {
+            results['water_1500ml'] = parsedNumbers[0];
+          }
+        }
+      }
+
+      return results;
+    }
+
+    // ==========================================
+    // 🎨 FUNÇÕES DE UI
+    // ==========================================
+
+    function initializeProductCounts() {
+      productCounts = {};
+      customProducts.forEach(product => {
+        productCounts[product.id] = 0;
+      });
+    }
+
+    function generateRoomButtons() {
+      const floor1 = document.getElementById('floor1');
+      const floor2 = document.getElementById('floor2');
+      const floor3 = document.getElementById('floor3');
+
+      for (let i = 101; i <= 110; i++) {
+        floor1.appendChild(createRoomButton(i.toString()));
+      }
+
+      for (let i = 201; i <= 210; i++) {
+        floor2.appendChild(createRoomButton(i.toString()));
+      }
+
+      for (let i = 301; i <= 307; i++) {
+        floor3.appendChild(createRoomButton(i.toString()));
+      }
+    }
+
+    function createRoomButton(roomNumber) {
+      const btn = document.createElement('button');
+      btn.innerHTML = `
+        <div class="flex flex-col items-center gap-2 relative">
+          <div class="absolute inset-0 bg-white opacity-0 rounded-xl group-hover:opacity-20 transition-opacity"></div>
+          <span class="text-3xl drop-shadow-lg">🚪</span>
+          <span class="font-bold text-xl drop-shadow-md">${roomNumber}</span>
+        </div>
+      `;
+      btn.className = 'room-btn group px-6 py-6 bg-white bg-opacity-90 backdrop-blur-sm text-gray-800 rounded-2xl hover:bg-opacity-100 hover:scale-105 shadow-xl hover:shadow-2xl border-3 border-white border-opacity-50 transition-all duration-200';
+      btn.onclick = () => selectRoom(roomNumber);
+      return btn;
+    }
+
+    function selectRoom(roomNumber) {
+      currentRoom = roomNumber;
+      document.getElementById('selectedRoom').textContent = roomNumber;
+      document.getElementById('productSection').classList.remove('hidden');
+      
+      initializeProductCounts();
+      renderProductSelection();
+      document.getElementById('operatorName').value = '';
+      
+      document.getElementById('productSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelSelection() {
+      currentRoom = null;
+      document.getElementById('productSection').classList.add('hidden');
+    }
+
+    function renderProductSelection() {
+      const container = document.getElementById('manualModeSection');
+      container.innerHTML = customProducts.map(product => `
+        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+          <div class="flex items-center gap-4">
+            <div class="text-4xl">${product.emoji}</div>
+            <div>
+              <h3 class="font-bold text-gray-800">${product.name}</h3>
+              ${product.description ? `<p class="text-sm text-gray-600">${product.description}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="decrementProduct('${product.id}')" class="counter-btn w-10 h-10 bg-red-500 text-white rounded-lg hover:bg-red-600 font-bold text-xl">-</button>
+            <span id="count_${product.id}" class="text-2xl font-bold text-gray-800 w-12 text-center">0</span>
+            <button onclick="incrementProduct('${product.id}')" class="counter-btn w-10 h-10 bg-green-500 text-white rounded-lg hover:bg-green-600 font-bold text-xl">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchMode(mode) {
+      const chatSection = document.getElementById('chatModeSection');
+      const manualSection = document.getElementById('manualModeSection');
+      const chatBtn = document.getElementById('btnChatMode');
+      const manualBtn = document.getElementById('btnManualMode');
+
+      if (mode === 'chat') {
+        chatSection.classList.remove('hidden');
+        manualSection.classList.add('hidden');
+        chatBtn.className = 'flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold transition-colors';
+        manualBtn.className = 'flex-1 px-4 py-3 bg-white text-gray-700 rounded-lg font-semibold transition-colors';
+      } else {
+        chatSection.classList.add('hidden');
+        manualSection.classList.remove('hidden');
+        manualBtn.className = 'flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold transition-colors';
+        chatBtn.className = 'flex-1 px-4 py-3 bg-white text-gray-700 rounded-lg font-semibold transition-colors';
+      }
+    }
+
+    function processChatInput() {
+      const input = document.getElementById('chatInput').value.trim();
+      
+      if (!input) {
+        showToast('Digite algo para processar', 'error');
+        return;
+      }
+
+      const parsed = parseTextInput(input);
+      let foundAny = false;
+
+      customProducts.forEach(product => {
+        if (parsed[product.id] > 0) {
+          productCounts[product.id] = parsed[product.id];
+          foundAny = true;
+        }
+      });
+
+      if (!foundAny) {
+        showToast('🤖 IA não conseguiu identificar produtos. Tente adicionar números e palavras como "grande", "pequena" ou "gás"', 'error');
+        return;
+      }
+
+      updateCountDisplays();
+      displayParsedResults(parsed);
+      showToast('🤖 IA identificou os produtos com sucesso!', 'success');
+    }
+
+    function displayParsedResults(parsed) {
+      const resultsDiv = document.getElementById('parsedResults');
+      const listDiv = document.getElementById('parsedList');
+      
+      const items = customProducts
+        .filter(product => parsed[product.id] > 0)
+        .map(product => `
+          <div class="flex items-center justify-between bg-white rounded-lg p-3">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">${product.emoji}</span>
+              <span class="font-semibold text-gray-800">${product.name}</span>
+            </div>
+            <span class="text-xl font-bold text-green-700">${parsed[product.id]}</span>
+          </div>
+        `).join('');
+
+      listDiv.innerHTML = items;
+      resultsDiv.classList.remove('hidden');
+    }
+
+    function clearParsedResults() {
+      document.getElementById('parsedResults').classList.add('hidden');
+      document.getElementById('chatInput').value = '';
+      initializeProductCounts();
+      updateCountDisplays();
+    }
+
+    function incrementProduct(productId) {
+      productCounts[productId]++;
+      updateCountDisplays();
+    }
+
+    function decrementProduct(productId) {
+      if (productCounts[productId] > 0) {
+        productCounts[productId]--;
+        updateCountDisplays();
+      }
+    }
+
+    function updateCountDisplays() {
+      customProducts.forEach(product => {
+        const element = document.getElementById(`count_${product.id}`);
+        if (element) {
+          element.textContent = productCounts[product.id] || 0;
+        }
+      });
+    }
+
+    async function saveSupply() {
+      const operatorName = document.getElementById('operatorName').value.trim();
+      
+      if (!operatorName) {
+        showToast('Por favor, digite o nome do operador', 'error');
+        return;
+      }
+
+      const total = Object.values(productCounts).reduce((sum, val) => sum + val, 0);
+      if (total === 0) {
+        showToast('Selecione pelo menos um produto', 'error');
+        return;
+      }
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+
+      const supplyData = {
+        room_number: currentRoom,
+        timestamp: new Date().toISOString(),
+        operator: operatorName,
+        items: customProducts
+          .filter(p => productCounts[p.id] > 0)
+          .map(p => ({
+            product_id: p.id,
+            product_name: p.name,
+            quantity: productCounts[p.id]
+          }))
+      };
+
+      const result = await createSupply(supplyData);
+
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = 'Registrar Abastecimento';
+
+      if (result.success) {
+        showToast('Abastecimento registrado com sucesso!', 'success');
+        cancelSelection();
+      } else {
+        showToast('Erro ao registrar abastecimento', 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    function calculateStock() {
+      const stock = {};
+      
+      customProducts.forEach(product => {
+        stock[product.id] = 0;
+      });
+
+      allSupplies.forEach(supply => {
+        if (supply.items && Array.isArray(supply.items)) {
+          supply.items.forEach(item => {
+            if (stock.hasOwnProperty(item.product_id)) {
+              stock[item.product_id] += item.quantity || 0;
+            }
+          });
+        }
+      });
+
+      return stock;
+    }
+
+    function updateStockDisplay() {
+      const stock = calculateStock();
+      const container = document.getElementById('stockDisplay');
+      
+      const colors = ['from-blue-500 to-blue-600', 'from-cyan-500 to-cyan-600', 'from-teal-500 to-teal-600', 'from-purple-500 to-purple-600', 'from-pink-500 to-pink-600', 'from-orange-500 to-orange-600'];
+      
+      const lowStockProducts = customProducts.filter(product => {
+        const quantity = stock[product.id] || 0;
+        return quantity <= 15;
+      });
+
+      const existingAlert = document.getElementById('orderAlert');
+      if (lowStockProducts.length > 0 && !existingAlert) {
+        showOrderAlert(lowStockProducts, stock);
+      } else if (lowStockProducts.length === 0 && existingAlert) {
+        existingAlert.remove();
+      } else if (lowStockProducts.length > 0 && existingAlert) {
+        updateOrderAlert(lowStockProducts, stock);
+      }
+      
+      container.innerHTML = customProducts.map((product, index) => {
+        const quantity = stock[product.id] || 0;
+        const isLow = quantity <= 15;
+        const isCritical = quantity <= 5;
+        
+        let alertBadge = '';
+        let cardClass = `bg-gradient-to-br ${colors[index % colors.length]} rounded-xl p-6 text-white`;
+        
+        if (isCritical) {
+          alertBadge = '<div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse flex items-center gap-1">🚨 CRÍTICO</div>';
+          cardClass = `bg-gradient-to-br from-red-600 to-red-700 rounded-xl p-6 text-white border-4 border-red-300 shadow-xl`;
+        } else if (isLow) {
+          alertBadge = '<div class="absolute top-3 right-3 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">⚠️ BAIXO</div>';
+          cardClass = `bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white border-2 border-yellow-300 shadow-lg`;
+        }
+        
+        return `
+          <div class="${cardClass} relative">
+            ${alertBadge}
+            <div class="text-5xl mb-3">${product.emoji}</div>
+            <h3 class="text-lg font-semibold mb-1">${product.name}</h3>
+            <p class="text-4xl font-bold">${quantity}</p>
+            <p class="text-sm opacity-90 mt-1">unidades em estoque</p>
+            ${isCritical ? '<p class="text-xs font-bold mt-2 bg-white bg-opacity-20 rounded px-2 py-1">🔴 Reabastecer urgente!</p>' : ''}
+            ${isLow && !isCritical ? '<p class="text-xs font-bold mt-2 bg-white bg-opacity-20 rounded px-2 py-1">🟡 Estoque baixo</p>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showOrderAlert(lowStockProducts, stock) {
+      const alertDiv = document.createElement('div');
+      alertDiv.id = 'orderAlert';
+      alertDiv.className = 'fixed bottom-6 right-6 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl shadow-2xl p-6 max-w-md z-50 animate-pulse';
+      
+      const productList = lowStockProducts.map(product => {
+        const quantity = stock[product.id] || 0;
+        const isCritical = quantity <= 5;
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-white border-opacity-30">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">${product.emoji}</span>
+              <span class="font-semibold">${product.name}</span>
+            </div>
+            <span class="font-bold ${isCritical ? 'text-red-200' : 'text-yellow-200'}">${quantity} ${isCritical ? '🚨' : '⚠️'}</span>
+          </div>
+        `;
+      }).join('');
+      
+      alertDiv.innerHTML = `
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-3xl">📦</span>
+            <h3 class="text-xl font-bold">Alerta de Pedido!</h3>
+          </div>
+          <button onclick="closeOrderAlert()" class="text-white hover:text-gray-200 text-2xl font-bold leading-none">&times;</button>
+        </div>
+        <p class="text-sm mb-4 opacity-90">Os seguintes produtos precisam ser reabastecidos:</p>
+        <div class="bg-white bg-opacity-10 rounded-lg p-3 mb-4">
+          ${productList}
+        </div>
+        <button onclick="generateOrderList()" class="w-full bg-white text-orange-600 font-bold py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+          📋 Gerar Lista de Pedido
+        </button>
+      `;
+      
+      document.body.appendChild(alertDiv);
+    }
+
+    function updateOrderAlert(lowStockProducts, stock) {
+      const existingAlert = document.getElementById('orderAlert');
+      if (!existingAlert) return;
+      
+      const productList = lowStockProducts.map(product => {
+        const quantity = stock[product.id] || 0;
+        const isCritical = quantity <= 5;
+        return `
+          <div class="flex items-center justify-between py-2 border-b border-white border-opacity-30">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">${product.emoji}</span>
+              <span class="font-semibold">${product.name}</span>
+            </div>
+            <span class="font-bold ${isCritical ? 'text-red-200' : 'text-yellow-200'}">${quantity} ${isCritical ? '🚨' : '⚠️'}</span>
+          </div>
+        `;
+      }).join('');
+      
+      const listContainer = existingAlert.querySelector('.bg-white.bg-opacity-10');
+      if (listContainer) {
+        listContainer.innerHTML = productList;
+      }
+    }
+
+    function closeOrderAlert() {
+      const alert = document.getElementById('orderAlert');
+      if (alert) {
+        alert.remove();
+      }
+    }
+
+    function generateOrderList() {
+      const stock = calculateStock();
+      const lowStockProducts = customProducts.filter(product => {
+        const quantity = stock[product.id] || 0;
+        return quantity <= 15;
+      });
+
+      if (lowStockProducts.length === 0) {
+        showToast('Nenhum produto com estoque baixo', 'error');
+        return;
+      }
+
+      let orderText = '📋 LISTA DE PEDIDO - HOTEL\n';
+      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+      orderText += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
+      orderText += `Hora: ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}\n\n`;
+      orderText += 'PRODUTOS COM ESTOQUE BAIXO:\n\n';
+
+      lowStockProducts.forEach(product => {
+        const quantity = stock[product.id] || 0;
+        const status = quantity <= 5 ? '🚨 CRÍTICO' : '⚠️ BAIXO';
+        const suggested = quantity <= 5 ? 200 : 100;
+        
+        orderText += `${product.emoji} ${product.name}\n`;
+        orderText += `   Atual: ${quantity} unidades ${status}\n`;
+        orderText += `   Sugerido: ${suggested} unidades\n\n`;
+      });
+
+      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      orderText += 'Gerado automaticamente pelo sistema';
+
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[80%] overflow-y-auto">
+          <div class="flex justify-between items-start mb-6">
+            <h2 class="text-3xl font-bold text-orange-600 flex items-center gap-2">
+              📋 Lista de Pedido
+            </h2>
+            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none">&times;</button>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-6 mb-6 font-mono text-sm whitespace-pre-wrap border-2 border-gray-200">
+${orderText}
+          </div>
+
+          <div class="flex gap-3">
+            <button onclick="copyOrderList(\`${orderText.replace(/`/g, '\\`')}\`)" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition-colors flex items-center justify-center gap-2">
+              📋 Copiar Lista
+            </button>
+            <button onclick="printOrderList(\`${orderText.replace(/`/g, '\\`')}\`)" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-colors flex items-center justify-center gap-2">
+              🖨️ Imprimir
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+
+    function copyOrderList(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 Lista copiada para a área de transferência!', 'success');
+      }).catch(() => {
+        showToast('Erro ao copiar lista', 'error');
+      });
+    }
+
+    function printOrderList(text) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Lista de Pedido - Hotel</title>
+            <style>
+              body {
+                font-family: 'Courier New', monospace;
+                padding: 40px;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              pre {
+                white-space: pre-wrap;
+                font-size: 14px;
+                line-height: 1.6;
+              }
+            </style>
+          </head>
+          <body>
+            <pre>${text}</pre>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function renderAdminStockList() {
+      const stock = calculateStock();
+      const container = document.getElementById('stockList');
+      
+      container.innerHTML = customProducts.map(product => `
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-gray-700">${product.emoji} ${product.name}</span>
+          <div class="flex items-center gap-3">
+            <button onclick="adjustStock('${product.id}', -10)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-bold">-10</button>
+            <button onclick="adjustStock('${product.id}', -1)" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-bold">-1</button>
+            <span id="admin_stock_${product.id}" class="text-xl font-bold text-gray-800 w-16 text-center">${stock[product.id] || 0}</span>
+            <button onclick="adjustStock('${product.id}', 1)" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-bold">+1</button>
+            <button onclick="adjustStock('${product.id}', 10)" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-bold">+10</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderProductsList() {
+      const container = document.getElementById('productsList');
+      
+      if (customProducts.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum produto cadastrado</p>';
+        return;
+      }
+
+      container.innerHTML = customProducts.map((product, index) => `
+        <div class="bg-white rounded-lg p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">${product.emoji}</span>
+            <div>
+              <h4 class="font-bold text-gray-800">${product.name}</h4>
+              ${product.description ? `<p class="text-sm text-gray-600">${product.description}</p>` : ''}
+            </div>
+          </div>
+          ${index >= 3 ? `
+            <button onclick="deleteProductById('${product.id}')" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+              Excluir
+            </button>
+          ` : '<span class="text-xs text-gray-500 px-4">Produto padrão</span>'}
+        </div>
+      `).join('');
+    }
+
+    async function addNewProduct() {
+      const name = document.getElementById('newProductName').value.trim();
+      const emoji = document.getElementById('newProductEmoji').value.trim() || '📦';
+      const quantity = parseInt(document.getElementById('newProductQuantity').value) || 0;
+
+      if (!name) {
+        showToast('Digite o nome do produto', 'error');
+        return;
+      }
+
+      const productId = 'custom_' + Date.now();
+      
+      const newProduct = {
+        id: productId,
+        name: name,
+        emoji: emoji,
+        description: ''
+      };
+
+      const productResult = await createProduct(newProduct);
+      
+      if (!productResult.success) {
+        showToast('Erro ao cadastrar produto', 'error');
+        return;
+      }
+
+      if (quantity > 0) {
+        const adjustData = {
+          room_number: 'ADMIN-CADASTRO',
+          timestamp: new Date().toISOString(),
+          operator: 'Administrador',
+          items: [{
+            product_id: productId,
+            product_name: name,
+            quantity: quantity
+          }]
+        };
+
+        await createSupply(adjustData);
+      } else {
+        await refreshData();
+      }
+
+      document.getElementById('newProductName').value = '';
+      document.getElementById('newProductEmoji').value = '';
+      document.getElementById('newProductQuantity').value = '';
+
+      renderProductsList();
+      renderProductSelection();
+
+      showToast('Produto cadastrado com sucesso!', 'success');
+    }
+
+    async function deleteProductById(productId) {
+      const productIndex = customProducts.findIndex(p => p.id === productId);
+      
+      if (productIndex < 3) {
+        showToast('Não é possível excluir produtos padrão', 'error');
+        return;
+      }
+
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      confirmDiv.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <h3 class="text-2xl font-bold text-red-600 mb-4">⚠️ Confirmar Exclusão</h3>
+          <p class="text-gray-700 mb-6">Tem certeza que deseja excluir este produto? Os registros históricos serão mantidos.</p>
+          <div class="flex gap-3">
+            <button id="confirmDelete" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold transition-colors">
+              Sim, Excluir
+            </button>
+            <button id="cancelDelete" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-bold transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(confirmDiv);
+
+      document.getElementById('cancelDelete').onclick = () => {
+        confirmDiv.remove();
+      };
+
+      document.getElementById('confirmDelete').onclick = async () => {
+        const result = await deleteProduct(productId);
+        
+        if (result.success) {
+          await refreshData();
+          renderProductsList();
+          renderProductSelection();
+          showToast('Produto excluído com sucesso!', 'success');
+        } else {
+          showToast('Erro ao excluir produto', 'error');
+        }
+        
+        confirmDiv.remove();
+      };
+    }
+
+    function showAdminLogin() {
+      document.getElementById('adminModal').classList.remove('hidden');
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminError').classList.add('hidden');
+      setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+      document.getElementById('adminPassword').value = '';
+    }
+
+    function checkAdminPassword() {
+      const password = document.getElementById('adminPassword').value;
+      const errorMsg = document.getElementById('adminError');
+      
+      if (password === '12345') {
+        closeAdminModal();
+        openAdminPanel();
+      } else {
+        errorMsg.classList.remove('hidden');
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+      }
+    }
+
+    function openAdminPanel() {
+      document.getElementById('adminPanel').classList.remove('hidden');
+      renderAdminStockList();
+      renderProductsList();
+      document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('adminPanel').classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+      const stockTab = document.getElementById('stockTab');
+      const productsTab = document.getElementById('productsTab');
+      const stockBtn = document.getElementById('tabStock');
+      const productsBtn = document.getElementById('tabProducts');
+
+      if (tab === 'stock') {
+        stockTab.classList.remove('hidden');
+        productsTab.classList.add('hidden');
+        stockBtn.className = 'px-6 py-3 font-semibold border-b-4 border-red-500 text-red-600';
+        productsBtn.className = 'px-6 py-3 font-semibold text-gray-600 hover:text-gray-800';
+        renderAdminStockList();
+      } else {
+        stockTab.classList.add('hidden');
+        productsTab.classList.remove('hidden');
+        productsBtn.className = 'px-6 py-3 font-semibold border-b-4 border-red-500 text-red-600';
+        stockBtn.className = 'px-6 py-3 font-semibold text-gray-600 hover:text-gray-800';
+        renderProductsList();
+      }
+    }
+
+    function processAdminChatInput() {
+      const input = document.getElementById('adminChatInput').value.trim();
+      
+      if (!input) {
+        showToast('Digite algo para processar', 'error');
+        return;
+      }
+
+      const parsed = parseTextInput(input);
+      let foundAny = false;
+
+      customProducts.forEach(product => {
+        if (parsed[product.id] > 0) {
+          foundAny = true;
+        }
+      });
+
+      if (!foundAny) {
+        showToast('🤖 IA não conseguiu identificar produtos. Tente adicionar números e palavras como "grande", "pequena" ou "gás"', 'error');
+        return;
+      }
+
+      displayAdminParsedResults(parsed);
+      showToast('🤖 IA identificou! Clique em "Aplicar Ajustes" para confirmar.', 'success');
+    }
+
+    function displayAdminParsedResults(parsed) {
+      const resultsDiv = document.getElementById('adminParsedResults');
+      const listDiv = document.getElementById('adminParsedList');
+      
+      const items = customProducts
+        .filter(product => parsed[product.id] > 0)
+        .map(product => `
+          <div class="flex items-center justify-between bg-white rounded-lg p-3">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">${product.emoji}</span>
+              <span class="font-semibold text-gray-800">${product.name}</span>
+            </div>
+            <span class="text-xl font-bold text-green-700">+${parsed[product.id]}</span>
+          </div>
+        `).join('');
+
+      listDiv.innerHTML = items + `
+        <button onclick="applyAdminAdjustments(${JSON.stringify(parsed).replace(/"/g, '&quot;')})" class="w-full mt-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold transition-colors">
+          ✅ Aplicar Ajustes ao Estoque
+        </button>
+      `;
+      
+      resultsDiv.classList.remove('hidden');
+    }
+
+    async function applyAdminAdjustments(parsed) {
+      const adjustItems = customProducts
+        .filter(p => parsed[p.id] > 0)
+        .map(p => ({
+          product_id: p.id,
+          product_name: p.name,
+          quantity: parsed[p.id]
+        }));
+
+      const adjustData = {
+        room_number: 'ADMIN-AJUSTE-TEXTO',
+        timestamp: new Date().toISOString(),
+        operator: 'Administrador',
+        items: adjustItems
+      };
+
+      const result = await createSupply(adjustData);
+
+      if (result.success) {
+        showToast('Estoque ajustado com sucesso!', 'success');
+        clearAdminParsedResults();
+      } else {
+        showToast('Erro ao ajustar estoque', 'error');
+      }
+    }
+
+    function clearAdminParsedResults() {
+      document.getElementById('adminParsedResults').classList.add('hidden');
+      document.getElementById('adminChatInput').value = '';
+    }
+
+    async function adjustStock(productId, amount) {
+      const product = customProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      const adjustData = {
+        room_number: 'ADMIN-AJUSTE',
+        timestamp: new Date().toISOString(),
+        operator: 'Administrador',
+        items: [{
+          product_id: productId,
+          product_name: product.name,
+          quantity: amount
+        }]
+      };
+
+      const result = await createSupply(adjustData);
+
+      if (result.success) {
+        showToast('Estoque ajustado com sucesso!', 'success');
+      } else {
+        showToast('Erro ao ajustar estoque', 'error');
+      }
+    }
+
+    async function resetAllStock() {
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      confirmDiv.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <h3 class="text-2xl font-bold text-red-600 mb-4">⚠️ Confirmar Ação</h3>
+          <p class="text-gray-700 mb-6">Tem certeza que deseja ZERAR TODO O ESTOQUE? Esta ação não pode ser desfeita.</p>
+          <div class="flex gap-3">
+            <button id="confirmReset" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold transition-colors">
+              Sim, Zerar Tudo
+            </button>
+            <button id="cancelReset" class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-bold transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(confirmDiv);
+
+      document.getElementById('cancelReset').onclick = () => {
+        confirmDiv.remove();
+      };
+
+      document.getElementById('confirmReset').onclick = async () => {
+        const confirmBtn = document.getElementById('confirmReset');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+
+        for (const supply of allSupplies) {
+          await deleteSupplyById(supply.id);
+        }
+
+        confirmDiv.remove();
+        showToast('Todo o estoque foi zerado!', 'success');
+      };
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      
+      if (allSupplies.length === 0) {
+        historyList.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum abastecimento registrado ainda</p>';
+        return;
+      }
+
+      const sortedSupplies = [...allSupplies].sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+
+      historyList.innerHTML = sortedSupplies.map(supply => {
+        const date = new Date(supply.timestamp);
+        const dateStr = date.toLocaleDateString('pt-BR');
+        const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const items = supply.items && Array.isArray(supply.items) ? 
+          supply.items.map(item => {
+            const product = customProducts.find(p => p.id === item.product_id);
+            if (!product) return '';
+            
+            return `
+              <div class="bg-blue-50 rounded-lg p-3 text-center">
+                <div class="text-2xl mb-1">${product.emoji}</div>
+                <p class="text-sm text-gray-600">${product.name}</p>
+                <p class="text-xl font-bold text-gray-800">${item.quantity}</p>
+              </div>
+            `;
+          }).join('') : '';
+        
+        return `
+          <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-indigo-300 transition-colors">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-indigo-900">Quarto ${supply.room_number}</h3>
+                <p class="text-sm text-gray-600">${dateStr} às ${timeStr}</p>
+                <p class="text-sm text-gray-700 mt-1">Por: <span class="font-semibold">${supply.operator}</span></p>
+              </div>
+              <button onclick="deleteSupplyRecord('${supply.id}')" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold">
+                Excluir
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+              ${items}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteSupplyRecord(supplyId) {
+      const deleteBtn = event.target;
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Excluindo...';
+
+      const result = await deleteSupplyById(supplyId);
+
+      if (!result.success) {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Excluir';
+        showToast('Erro ao excluir registro', 'error');
+      }
+    }
+
+    async function init() {
+      initializeProductCounts();
+      
+      await refreshData();
+      
+      generateRoomButtons();
+    }
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a3850efc4d1f61f',t:'MTc2Mzk4MTEyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
