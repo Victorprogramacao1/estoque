@@ -86,10 +86,31 @@
    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
     <div class="flex justify-between items-start mb-4">
      <div>
-      <h1 class="text-4xl font-bold text-indigo-900 mb-2">Gestão de Abastecimento Hotel <span class="ai-badge">🤖 IA Integrada</span></h1>
-      <p class="text-gray-600">Controle de águas e produtos por quarto com reconhecimento inteligente</p>
+      <h1 class="text-4xl font-bold text-indigo-900 mb-2">Gestão de Abastecimento Hotel <span class="ai-badge">🤖 IA Integrada</span> <span class="ai-badge" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🎤 Voz</span></h1>
+      <p class="text-gray-600">Controle de águas e produtos por quarto com reconhecimento inteligente e voz</p>
       <p class="text-xs text-green-600 font-semibold mt-2">✅ Conectado ao Supabase - Dados salvos na nuvem!</p>
-     </div><button onclick="showAdminLogin()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold transition-colors flex items-center gap-2"> 🔐 Admin </button>
+     </div>
+     <div class="flex gap-3"><button id="voiceBtn" onclick="toggleVoiceRecognition()" class="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 font-semibold transition-colors flex items-center gap-2 shadow-lg"> 🎤 Ativar Voz </button> <button onclick="showAdminLogin()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold transition-colors flex items-center gap-2"> 🔐 Admin </button>
+     </div>
+    </div><!-- Voice Status -->
+    <div id="voiceStatus" class="hidden mt-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border-2 border-red-200">
+     <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+       <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div><span class="font-bold text-red-700">🎤 Escutando...</span>
+      </div><button onclick="stopVoiceRecognition()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold text-sm"> Parar </button>
+     </div>
+     <div class="bg-white rounded-lg p-3 mb-2">
+      <p class="text-xs text-gray-500 mb-1">Você disse:</p>
+      <p id="voiceTranscript" class="text-gray-800 font-medium min-h-[24px]">Aguardando comando...</p>
+     </div>
+     <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-3">
+      <p class="text-xs font-bold text-purple-900 mb-2">💡 Exemplos de comandos:</p>
+      <ul class="text-xs text-gray-700 space-y-1">
+       <li>• "Quarto 110, uma água grande e uma pequena"</li>
+       <li>• "Quarto 205, 10 águas de litro e meio"</li>
+       <li>• "Quarto 301, 5 grandes, 3 pequenas e 2 com gás"</li>
+      </ul>
+     </div>
     </div>
    </div><!-- Admin Login Modal -->
    <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -117,7 +138,7 @@
       <h4 class="font-bold text-gray-800 mb-2">💬 Ajustar Estoque por Texto <span class="ai-badge">🤖 IA</span></h4>
       <p class="text-sm text-gray-600 mb-3">Digite de qualquer forma! A IA entende automaticamente:</p>
       <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
-       <p class="text-sm font-semibold text-gray-800 mb-2">💡 A IA reconhece TUDO:</p>
+       <p class="text-sm font-semibold text-gray-800 mb-2">�� A IA reconhece TUDO:</p>
        <div class="space-y-2">
         <div class="bg-white rounded-lg p-3 border-l-4 border-blue-500">
          <p class="text-sm text-gray-700 font-medium">"20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas"</p>
@@ -257,6 +278,16 @@
     <h2 class="text-2xl font-bold text-indigo-900 mb-6">Estoque Atual</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="stockDisplay"><!-- Stock cards will be dynamically rendered here -->
     </div>
+   </div><!-- Daily Report -->
+   <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+    <div class="flex justify-between items-start mb-6">
+     <div>
+      <h2 class="text-2xl font-bold text-indigo-900">📊 Relatório do Dia</h2>
+      <p class="text-gray-600 text-sm mt-1" id="reportDate"></p>
+     </div><button onclick="printDailyReport()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-colors flex items-center gap-2"> 🖨️ Imprimir Relatório </button>
+    </div>
+    <div id="dailyReportContent" class="space-y-6"><!-- Será preenchido dinamicamente -->
+    </div>
    </div><!-- History -->
    <div class="bg-white rounded-2xl shadow-xl p-8">
     <h2 class="text-2xl font-bold text-indigo-900 mb-6">Histórico de Abastecimentos</h2>
@@ -386,6 +417,8 @@
     let productCounts = {};
     let allSupplies = [];
     let customProducts = [];
+    let recognition = null;
+    let isListening = false;
 
 
 
@@ -394,6 +427,7 @@
       customProducts = await fetchProducts();
       allSupplies = await fetchSupplies();
       updateStockDisplay();
+      renderDailyReport();
       renderHistory();
       if (!document.getElementById('adminPanel').classList.contains('hidden')) {
         renderAdminStockList();
@@ -902,7 +936,7 @@
         orderText += `   Sugerido: ${suggested} unidades\n\n`;
       });
 
-      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━���━\n';
       orderText += 'Gerado automaticamente pelo sistema';
 
       const modal = document.createElement('div');
@@ -1017,7 +1051,7 @@ ${orderText}
 
     async function addNewProduct() {
       const name = document.getElementById('newProductName').value.trim();
-      const emoji = document.getElementById('newProductEmoji').value.trim() || '📦';
+      const emoji = document.getElementById('newProductEmoji').value.trim() || '��';
       const quantity = parseInt(document.getElementById('newProductQuantity').value) || 0;
 
       if (!name) {
@@ -1317,6 +1351,340 @@ ${orderText}
       };
     }
 
+    function renderDailyReport() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todaySupplies = allSupplies.filter(supply => {
+        const supplyDate = new Date(supply.timestamp);
+        supplyDate.setHours(0, 0, 0, 0);
+        return supplyDate.getTime() === today.getTime();
+      });
+
+      document.getElementById('reportDate').textContent = 
+        `Data: ${today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+      const reportContent = document.getElementById('dailyReportContent');
+
+      if (todaySupplies.length === 0) {
+        reportContent.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum abastecimento registrado hoje</p>';
+        return;
+      }
+
+      // Calcular totais por produto
+      const totals = {};
+      customProducts.forEach(p => totals[p.id] = 0);
+
+      todaySupplies.forEach(supply => {
+        if (supply.items && Array.isArray(supply.items)) {
+          supply.items.forEach(item => {
+            if (totals.hasOwnProperty(item.product_id)) {
+              totals[item.product_id] += item.quantity || 0;
+            }
+          });
+        }
+      });
+
+      // Resumo geral
+      const summaryHTML = `
+        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6 border-2 border-indigo-200">
+          <h3 class="text-lg font-bold text-indigo-900 mb-4">📦 Resumo do Dia</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            ${customProducts.map(product => {
+              const qty = totals[product.id];
+              if (qty === 0) return '';
+              return `
+                <div class="bg-white rounded-lg p-4 text-center shadow-sm">
+                  <div class="text-3xl mb-2">${product.emoji}</div>
+                  <p class="text-sm text-gray-600 font-semibold">${product.name}</p>
+                  <p class="text-2xl font-bold text-indigo-600">${qty}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="mt-4 pt-4 border-t-2 border-indigo-200 text-center">
+            <p class="text-sm text-gray-600">
+              <span class="font-bold text-indigo-900">${todaySupplies.length}</span> abastecimentos realizados hoje
+            </p>
+          </div>
+        </div>
+      `;
+
+      // Detalhamento por quarto
+      const sortedSupplies = [...todaySupplies].sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+
+      const detailsHTML = `
+        <div>
+          <h3 class="text-lg font-bold text-gray-800 mb-4">📋 Detalhamento por Quarto</h3>
+          <div class="space-y-3">
+            ${sortedSupplies.map(supply => {
+              const date = new Date(supply.timestamp);
+              const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              
+              const itemsText = supply.items && Array.isArray(supply.items) ?
+                supply.items.map(item => {
+                  const product = customProducts.find(p => p.id === item.product_id);
+                  return product ? `${product.emoji} ${item.quantity} ${product.name}` : '';
+                }).filter(Boolean).join(' • ') : '';
+              
+              return `
+                <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-indigo-500">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-bold text-indigo-900 text-lg">Quarto ${supply.room_number}</span>
+                        <span class="text-sm text-gray-500">${timeStr}</span>
+                      </div>
+                      <p class="text-sm text-gray-700 mb-2">Operador: <span class="font-semibold">${supply.operator}</span></p>
+                      <p class="text-sm text-gray-800">${itemsText}</p>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      reportContent.innerHTML = summaryHTML + detailsHTML;
+    }
+
+    function printDailyReport() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todaySupplies = allSupplies.filter(supply => {
+        const supplyDate = new Date(supply.timestamp);
+        supplyDate.setHours(0, 0, 0, 0);
+        return supplyDate.getTime() === today.getTime();
+      });
+
+      if (todaySupplies.length === 0) {
+        showToast('Nenhum abastecimento registrado hoje', 'error');
+        return;
+      }
+
+      // Calcular totais
+      const totals = {};
+      customProducts.forEach(p => totals[p.id] = 0);
+
+      todaySupplies.forEach(supply => {
+        if (supply.items && Array.isArray(supply.items)) {
+          supply.items.forEach(item => {
+            if (totals.hasOwnProperty(item.product_id)) {
+              totals[item.product_id] += item.quantity || 0;
+            }
+          });
+        }
+      });
+
+      const sortedSupplies = [...todaySupplies].sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+      );
+
+      const dateStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Relatório de Abastecimento - ${today.toLocaleDateString('pt-BR')}</title>
+            <style>
+              @media print {
+                @page {
+                  margin: 2cm;
+                }
+              }
+              body {
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                max-width: 1000px;
+                margin: 0 auto;
+                color: #333;
+              }
+              .header {
+                text-align: center;
+                border-bottom: 3px solid #4F46E5;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+              }
+              .header h1 {
+                color: #4F46E5;
+                margin: 0 0 10px 0;
+                font-size: 28px;
+              }
+              .header p {
+                margin: 5px 0;
+                color: #666;
+                font-size: 14px;
+              }
+              .summary {
+                background: #F3F4F6;
+                border: 2px solid #E5E7EB;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 30px;
+              }
+              .summary h2 {
+                color: #4F46E5;
+                margin-top: 0;
+                margin-bottom: 15px;
+                font-size: 20px;
+              }
+              .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 15px;
+              }
+              .summary-item {
+                background: white;
+                border: 1px solid #E5E7EB;
+                border-radius: 6px;
+                padding: 15px;
+                text-align: center;
+              }
+              .summary-item .emoji {
+                font-size: 24px;
+                margin-bottom: 8px;
+              }
+              .summary-item .name {
+                font-size: 13px;
+                color: #666;
+                font-weight: 600;
+                margin-bottom: 5px;
+              }
+              .summary-item .quantity {
+                font-size: 24px;
+                font-weight: bold;
+                color: #4F46E5;
+              }
+              .summary-footer {
+                border-top: 2px solid #E5E7EB;
+                padding-top: 15px;
+                text-align: center;
+                font-weight: bold;
+                color: #4F46E5;
+              }
+              .details {
+                margin-top: 30px;
+              }
+              .details h2 {
+                color: #4F46E5;
+                margin-bottom: 15px;
+                font-size: 20px;
+              }
+              .supply-item {
+                border: 1px solid #E5E7EB;
+                border-left: 4px solid #4F46E5;
+                border-radius: 6px;
+                padding: 15px;
+                margin-bottom: 10px;
+                background: #F9FAFB;
+                page-break-inside: avoid;
+              }
+              .supply-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+              }
+              .supply-room {
+                font-size: 18px;
+                font-weight: bold;
+                color: #4F46E5;
+              }
+              .supply-time {
+                font-size: 13px;
+                color: #666;
+              }
+              .supply-operator {
+                font-size: 13px;
+                color: #666;
+                margin-bottom: 8px;
+              }
+              .supply-items {
+                font-size: 14px;
+                color: #333;
+              }
+              .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px solid #E5E7EB;
+                text-align: center;
+                font-size: 12px;
+                color: #999;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>🏨 RELATÓRIO DE ABASTECIMENTO</h1>
+              <p>${dateStr.toUpperCase()}</p>
+              <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+            </div>
+
+            <div class="summary">
+              <h2>📦 RESUMO DO DIA</h2>
+              <div class="summary-grid">
+                ${customProducts.map(product => {
+                  const qty = totals[product.id];
+                  if (qty === 0) return '';
+                  return `
+                    <div class="summary-item">
+                      <div class="emoji">${product.emoji}</div>
+                      <div class="name">${product.name}</div>
+                      <div class="quantity">${qty}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <div class="summary-footer">
+                Total de ${todaySupplies.length} abastecimentos realizados
+              </div>
+            </div>
+
+            <div class="details">
+              <h2>📋 DETALHAMENTO POR QUARTO</h2>
+              ${sortedSupplies.map(supply => {
+                const date = new Date(supply.timestamp);
+                const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                
+                const itemsText = supply.items && Array.isArray(supply.items) ?
+                  supply.items.map(item => {
+                    const product = customProducts.find(p => p.id === item.product_id);
+                    return product ? `${product.emoji} ${item.quantity} ${product.name}` : '';
+                  }).filter(Boolean).join(' • ') : '';
+                
+                return `
+                  <div class="supply-item">
+                    <div class="supply-header">
+                      <span class="supply-room">Quarto ${supply.room_number}</span>
+                      <span class="supply-time">${timeStr}</span>
+                    </div>
+                    <div class="supply-operator">Operador: ${supply.operator}</div>
+                    <div class="supply-items">${itemsText}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="footer">
+              <p>Sistema de Gestão de Abastecimento Hotel</p>
+              <p>Este documento foi gerado automaticamente</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+
     function renderHistory() {
       const historyList = document.getElementById('historyList');
       
@@ -1382,15 +1750,187 @@ ${orderText}
       }
     }
 
+    // ==========================================
+    // 🎤 RECONHECIMENTO DE VOZ (ASR)
+    // ==========================================
+
+    function initVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        showToast('Reconhecimento de voz não disponível neste navegador', 'error');
+        return false;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        isListening = true;
+        document.getElementById('voiceStatus').classList.remove('hidden');
+        document.getElementById('voiceBtn').innerHTML = '🎤 Voz Ativa';
+        document.getElementById('voiceBtn').className = 'px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 font-semibold transition-colors flex items-center gap-2 shadow-lg';
+        document.getElementById('voiceTranscript').textContent = 'Aguardando comando...';
+      };
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        const displayText = finalTranscript || interimTranscript;
+        document.getElementById('voiceTranscript').textContent = displayText;
+
+        if (finalTranscript) {
+          processVoiceCommand(finalTranscript.trim());
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Erro no reconhecimento de voz:', event.error);
+        if (event.error === 'no-speech') {
+          document.getElementById('voiceTranscript').textContent = 'Nenhuma fala detectada...';
+        } else if (event.error === 'not-allowed') {
+          showToast('Permissão de microfone negada', 'error');
+          stopVoiceRecognition();
+        } else {
+          showToast('Erro no reconhecimento de voz', 'error');
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          recognition.start();
+        }
+      };
+
+      return true;
+    }
+
+    function toggleVoiceRecognition() {
+      if (!recognition) {
+        if (!initVoiceRecognition()) {
+          return;
+        }
+      }
+
+      if (isListening) {
+        stopVoiceRecognition();
+      } else {
+        startVoiceRecognition();
+      }
+    }
+
+    function startVoiceRecognition() {
+      try {
+        recognition.start();
+        showToast('🎤 Reconhecimento de voz ativado', 'success');
+      } catch (error) {
+        console.error('Erro ao iniciar reconhecimento:', error);
+      }
+    }
+
+    function stopVoiceRecognition() {
+      isListening = false;
+      if (recognition) {
+        recognition.stop();
+      }
+      document.getElementById('voiceStatus').classList.add('hidden');
+      document.getElementById('voiceBtn').innerHTML = '🎤 Ativar Voz';
+      document.getElementById('voiceBtn').className = 'px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 font-semibold transition-colors flex items-center gap-2 shadow-lg';
+      showToast('🎤 Reconhecimento de voz desativado', 'success');
+    }
+
+    function processVoiceCommand(transcript) {
+      const normalized = transcript.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      // Extrair número do quarto
+      const roomMatch = normalized.match(/quarto\s*(\d{3})/);
+      if (!roomMatch) {
+        showToast('🎤 Não entendi o número do quarto. Diga "quarto" seguido do número', 'error');
+        return;
+      }
+
+      const roomNumber = roomMatch[1];
+      
+      // Verificar se o quarto existe
+      const validRooms = [];
+      for (let i = 101; i <= 110; i++) validRooms.push(i.toString());
+      for (let i = 201; i <= 210; i++) validRooms.push(i.toString());
+      for (let i = 301; i <= 307; i++) validRooms.push(i.toString());
+      
+      if (!validRooms.includes(roomNumber)) {
+        showToast(`🎤 Quarto ${roomNumber} não existe`, 'error');
+        return;
+      }
+
+      // Extrair produtos (tudo depois do número do quarto)
+      const afterRoom = normalized.split(/quarto\s*\d{3}/)[1];
+      if (!afterRoom || afterRoom.trim().length === 0) {
+        showToast('🎤 Não entendi quais produtos. Diga quantidades e tipos', 'error');
+        return;
+      }
+
+      // Selecionar o quarto
+      selectRoom(roomNumber);
+
+      // Usar o parser de IA para identificar produtos
+      const parsed = parseTextInput(afterRoom);
+      
+      let foundAny = false;
+      customProducts.forEach(product => {
+        if (parsed[product.id] > 0) {
+          productCounts[product.id] = parsed[product.id];
+          foundAny = true;
+        }
+      });
+
+      if (!foundAny) {
+        showToast('🎤 Não consegui identificar os produtos. Tente novamente', 'error');
+        return;
+      }
+
+      // Atualizar displays
+      updateCountDisplays();
+      
+      // Mostrar sucesso
+      const productsText = customProducts
+        .filter(p => productCounts[p.id] > 0)
+        .map(p => `${productCounts[p.id]} ${p.name}`)
+        .join(', ');
+      
+      showToast(`🎤 ✅ Quarto ${roomNumber}: ${productsText}`, 'success');
+
+      // Scroll para a seção de produtos
+      document.getElementById('productSection').scrollIntoView({ behavior: 'smooth' });
+
+      // Mudar para modo manual para visualização
+      switchMode('manual');
+    }
+
     async function init() {
       initializeProductCounts();
       
       await refreshData();
       
       generateRoomButtons();
+
+      // Inicializar reconhecimento de voz
+      initVoiceRecognition();
     }
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a3850efc4d1f61f',t:'MTc2Mzk4MTEyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a385e67c11bf61f',t:'MTc2Mzk4MTY3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
