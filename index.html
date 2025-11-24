@@ -86,8 +86,8 @@
    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
     <div class="flex justify-between items-start mb-4">
      <div>
-      <h1 class="text-4xl font-bold text-indigo-900 mb-2">Gestão de Abastecimento Hotel <span class="ai-badge">🤖 IA Integrada</span> <span class="ai-badge" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🎤 Voz</span></h1>
-      <p class="text-gray-600">Controle de águas e produtos por quarto com reconhecimento inteligente e voz</p>
+      <h1 class="text-4xl font-bold text-indigo-900 mb-2">Gestão de Abastecimento Hotel <span class="ai-badge">🤖 IA Avançada</span> <span class="ai-badge" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🎤 Voz++</span></h1>
+      <p class="text-gray-600">Controle de águas e produtos por quarto com IA ultra inteligente</p>
       <p class="text-xs text-green-600 font-semibold mt-2">✅ Conectado ao Supabase - Dados salvos na nuvem!</p>
      </div>
      <div class="flex gap-3"><button id="voiceBtn" onclick="toggleVoiceRecognition()" class="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 font-semibold transition-colors flex items-center gap-2 shadow-lg"> 🎤 Ativar Voz </button> <button onclick="showAdminLogin()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold transition-colors flex items-center gap-2"> 🔐 Admin </button>
@@ -104,11 +104,12 @@
       <p id="voiceTranscript" class="text-gray-800 font-medium min-h-[24px]">Aguardando comando...</p>
      </div>
      <div class="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-3">
-      <p class="text-xs font-bold text-purple-900 mb-2">💡 Exemplos de comandos:</p>
+      <p class="text-xs font-bold text-purple-900 mb-2">💡 Exemplos - IA entende TUDO:</p>
       <ul class="text-xs text-gray-700 space-y-1">
-       <li>• "Quarto 110, uma água grande e uma pequena"</li>
-       <li>• "Quarto 205, 10 águas de litro e meio"</li>
-       <li>• "Quarto 301, 5 grandes, 3 pequenas e 2 com gás"</li>
+       <li>• "Quarto 110, duas águas de quinhentos"</li>
+       <li>• "Quarto 205, dez águas grandes e cinco pequenas"</li>
+       <li>• "Quarto 301, três garrafas de litro e meio"</li>
+       <li>• "Quarto 102, uma água com gás"</li>
       </ul>
      </div>
     </div>
@@ -138,23 +139,23 @@
       <h4 class="font-bold text-gray-800 mb-2">💬 Ajustar Estoque por Texto <span class="ai-badge">🤖 IA</span></h4>
       <p class="text-sm text-gray-600 mb-3">Digite de qualquer forma! A IA entende automaticamente:</p>
       <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
-       <p class="text-sm font-semibold text-gray-800 mb-2">�� A IA reconhece TUDO:</p>
+       <p class="text-sm font-semibold text-gray-800 mb-2">💡 A IA reconhece TUDO:</p>
        <div class="space-y-2">
         <div class="bg-white rounded-lg p-3 border-l-4 border-blue-500">
-         <p class="text-sm text-gray-700 font-medium">"20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas"</p>
-         <p class="text-xs text-gray-500 mt-1">✓ Reconhece com ou sem acentos, pontos, vírgulas</p>
+         <p class="text-sm text-gray-700 font-medium">"duas águas de quinhentos"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Números por extenso</p>
         </div>
         <div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
-         <p class="text-sm text-gray-700 font-medium">"preciso 100 grandes 50 pequenas 25 gas"</p>
-         <p class="text-xs text-gray-500 mt-1">✓ Entende contexto sem palavras completas</p>
+         <p class="text-sm text-gray-700 font-medium">"vinte e cinco águas grandes"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Números compostos</p>
         </div>
         <div class="bg-white rounded-lg p-3 border-l-4 border-purple-500">
-         <p class="text-sm text-gray-700 font-medium">"coloca 200 de litro e meio e 80 gaseificada"</p>
-         <p class="text-xs text-gray-500 mt-1">✓ Reconhece sinônimos e variações naturais</p>
+         <p class="text-sm text-gray-700 font-medium">"coloca 10 de litro e meio"</p>
+         <p class="text-xs text-gray-500 mt-1">✓ Descrições naturais</p>
         </div>
        </div>
       </div>
-      <div class="relative mb-3"><textarea id="adminChatInput" placeholder="Digite naturalmente... Ex: 20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="2" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processAdminChatInput(); }"></textarea> <button onclick="processAdminChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar com IA </button>
+      <div class="relative mb-3"><textarea id="adminChatInput" placeholder="Digite naturalmente... Ex: duas águas de quinhentos" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="2" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processAdminChatInput(); }"></textarea> <button onclick="processAdminChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar com IA </button>
       </div><!-- Admin Parsed Results -->
       <div id="adminParsedResults" class="hidden p-4 bg-green-50 rounded-lg border-2 border-green-200">
        <h5 class="font-bold text-green-800 mb-2">✅ IA identificou:</h5>
@@ -253,16 +254,16 @@
     </div><!-- Chat Mode Input -->
     <div id="chatModeSection" class="mb-6">
      <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-4 border-2 border-purple-200">
-      <h3 class="font-bold text-gray-800 mb-2">🤖 IA: Digite de qualquer jeito!</h3>
+      <h3 class="font-bold text-gray-800 mb-2">🤖 IA Avançada: Fale naturalmente!</h3>
       <p class="text-sm text-gray-600 mb-3">Exemplos do que a IA entende:</p>
       <ul class="text-sm text-gray-600 space-y-1 ml-4">
-       <li>• "20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas"</li>
-       <li>• "preciso 10 grandes, 5 pequenas e 3 gaseificadas"</li>
-       <li>• "coloca 15 de litro e meio e 8 com gas"</li>
-       <li>• "100 pet grande 50 pet pequena 25 sparkling"</li>
+       <li>• "duas águas de quinhentos"</li>
+       <li>• "vinte e cinco águas grandes"</li>
+       <li>• "dez garrafas de litro e meio"</li>
+       <li>• "três águas com gás"</li>
       </ul>
      </div>
-     <div class="relative"><textarea id="chatInput" placeholder="Digite naturalmente... A IA vai entender! Ex: 20 aguas 1,5 ml e 5 aguas 500ml, e 6 aguas com gas" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="3" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processChatInput(); }"></textarea> <button onclick="processChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar </button>
+     <div class="relative"><textarea id="chatInput" placeholder="Digite naturalmente... Ex: duas águas de quinhentos" class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none resize-none" rows="3" onkeypress="if(event.key === 'Enter' &amp;&amp; !event.shiftKey) { event.preventDefault(); processChatInput(); }"></textarea> <button onclick="processChatInput()" class="absolute right-3 bottom-3 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-colors"> 🤖 Processar </button>
      </div><!-- Parsed Results -->
      <div id="parsedResults" class="hidden mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200">
       <h4 class="font-bold text-green-800 mb-2">✅ IA identificou:</h4>
@@ -420,7 +421,41 @@
     let recognition = null;
     let isListening = false;
 
+    // ==========================================
+    // 🔔 CONTROLE DE ALERTAS DE ESTOQUE BAIXO
+    // ==========================================
 
+    function shouldShowAlert() {
+      const today = new Date().toDateString();
+      const storageKey = 'alertDismissals';
+      
+      const dismissals = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      
+      // Se não é hoje, pode mostrar
+      if (dismissals.date !== today) {
+        return true;
+      }
+      
+      // Se já foi fechado 2 vezes ou mais hoje, não mostrar
+      return (dismissals.count || 0) < 2;
+    }
+
+    function recordAlertDismissal() {
+      const today = new Date().toDateString();
+      const storageKey = 'alertDismissals';
+      
+      let dismissals = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      
+      // Limpar dismissals de outros dias
+      if (dismissals.date !== today) {
+        dismissals = { date: today, count: 0 };
+      }
+      
+      // Incrementar contador
+      dismissals.count = (dismissals.count || 0) + 1;
+      
+      localStorage.setItem(storageKey, JSON.stringify(dismissals));
+    }
 
     // Atualizar dados da aplicação
     async function refreshData() {
@@ -435,7 +470,7 @@
     }
 
     // ==========================================
-    // 🤖 PARSER DE IA
+    // 🤖 PARSER DE IA SUPER AVANÇADO
     // ==========================================
 
     function parseTextInput(text) {
@@ -448,29 +483,84 @@
         .replace(/\s+/g, ' ')
         .trim();
 
+      // 🎯 KEYWORDS MEGA EXPANDIDAS - Reconhece MUITO mais variações!
       const keywords1500 = [
-        '1.5', '1,5', '15l', '1500', '1500ml', 'um e meio', 'litro e meio',
-        'grande', 'grandes', 'garrafa grande', 'garrafas grandes',
-        'pet grande', 'pets grandes', 'garrafa maior', 'maior',
-        'agua grande', 'aguas grandes', 'agua 1.5', 'agua 1,5'
+        // Números e medidas
+        '1.5', '1,5', '15l', '1500', '1500ml', '1 litro e meio', 'um litro e meio', 'litro e meio',
+        'um e meio', '1l e meio', '1 l e meio', 'mil e quinhentos',
+        // Tamanhos
+        'grande', 'grandes', 'grandona', 'grandonas', 'grandao', 'grandoes',
+        'garrafa grande', 'garrafas grandes', 'pet grande', 'pets grandes',
+        'garrafa maior', 'garrafas maiores', 'maior', 'maiores',
+        'agua grande', 'aguas grandes', 'agua 1.5', 'agua 1,5',
+        // Contextuais
+        'de litro e meio', 'tamanho grande', 'tamanho maior',
+        'litrao', 'litroes', 'litrao', 'de litrao'
       ];
       
       const keywords500 = [
-        '500', '500ml', 'quinhentos', 'meio litro',
-        'pequena', 'pequenas', 'garrafa pequena', 'garrafas pequenas',
-        'pet pequena', 'pets pequenas', 'garrafa menor', 'menor',
-        'agua pequena', 'aguas pequenas', 'agua 500'
+        // Números e medidas
+        '500', '500ml', '500 ml', 'quinhentos', 'quinhentos ml', 'meio litro',
+        'meia garrafa', '0.5', '0,5', 'meio l',
+        // Tamanhos
+        'pequena', 'pequenas', 'pequenina', 'pequeninas', 'pequeninha', 'pequeninhas',
+        'garrafa pequena', 'garrafas pequenas', 'pet pequena', 'pets pequenas',
+        'garrafa menor', 'garrafas menores', 'menor', 'menores',
+        'agua pequena', 'aguas pequenas', 'agua 500', 'agua de 500',
+        // Contextuais
+        'de quinhentos', 'tamanho pequeno', 'tamanho menor',
+        'mini', 'minis', 'miniatura', 'miniaturas'
       ];
       
       const keywordsGas = [
-        'gas', 'gás', 'com gas', 'comgas', 'c/ gas', 'c gas',
-        'gaseificada', 'gaseificadas', 'gasosa', 'gasosas',
-        'sparkling', 'carbonatada', 'carbonatadas',
-        'com bolhas', 'borbulhante',
-        'agua com gas', 'aguas com gas', 'agua gas', 'aguas gas'
+        // Palavras diretas
+        'gas', 'gás', 'gases', 'com gas', 'comgas', 'c/ gas', 'c gas', 'c/gas',
+        // Tipos
+        'gaseificada', 'gaseificadas', 'gasosa', 'gasosas', 'gaseificado',
+        'sparkling', 'carbonatada', 'carbonatadas', 'carbonatado',
+        // Descrições
+        'com bolhas', 'borbulhante', 'borbulhantes', 'com gas',
+        'agua com gas', 'aguas com gas', 'agua gas', 'aguas gas',
+        'agua gaseificada', 'aguas gaseificadas',
+        // Coloquiais
+        'gasosa', 'gazosa', 'gaseificada', 'de gas', 'que tem gas'
       ];
 
-      const segments = normalizedText.split(/\s+e\s+/);
+      // 🔢 RECONHECIMENTO DE NÚMEROS POR EXTENSO SUPER COMPLETO
+      const numberWords = {
+        'zero': 0, 'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'tres': 3, 'quatro': 4,
+        'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10,
+        'onze': 11, 'doze': 12, 'treze': 13, 'quatorze': 14, 'quinze': 15,
+        'dezesseis': 16, 'dezessete': 17, 'dezoito': 18, 'dezenove': 19, 'vinte': 20,
+        'trinta': 30, 'quarenta': 40, 'cinquenta': 50, 'sessenta': 60,
+        'setenta': 70, 'oitenta': 80, 'noventa': 90, 'cem': 100, 'cento': 100,
+        'duzentos': 200, 'trezentos': 300, 'quatrocentos': 400, 'quinhentos': 500,
+        'seiscentos': 600, 'setecentos': 700, 'oitocentos': 800, 'novecentos': 900
+      };
+
+      // Converter números por extenso em dígitos
+      let processedText = normalizedText;
+      
+      // Ordenar palavras-chave por tamanho (do maior para o menor) para evitar substituições parciais
+      const sortedNumberWords = Object.keys(numberWords).sort((a, b) => b.length - a.length);
+      
+      sortedNumberWords.forEach(word => {
+        const regex = new RegExp('\\b' + word + '\\b', 'g');
+        processedText = processedText.replace(regex, numberWords[word].toString());
+      });
+
+      // Tratar "e" entre números (ex: "vinte e cinco" → "25")
+      processedText = processedText.replace(/(\d+)\s+e\s+(\d+)(?!\s*(agua|garrafa|pet))/g, (match, num1, num2) => {
+        const n1 = parseInt(num1);
+        const n2 = parseInt(num2);
+        // Se primeiro número é múltiplo de 10 e segundo é menor que 10, soma
+        if (n1 >= 20 && n1 % 10 === 0 && n2 < 10) return (n1 + n2).toString();
+        // Se primeiro número é centena e segundo é menor que 100, soma
+        if (n1 >= 100 && n2 < 100) return (n1 + n2).toString();
+        return match;
+      });
+
+      const segments = processedText.split(/\s+e\s+/);
       
       segments.forEach(segment => {
         const numberMatch = segment.match(/(\d+)/);
@@ -497,12 +587,12 @@
       });
 
       if (Object.values(results).every(v => v === 0)) {
-        const numbers = normalizedText.match(/\d+/g);
+        const numbers = processedText.match(/\d+/g);
         if (!numbers || numbers.length === 0) return results;
         
-        const gasScore = keywordsGas.filter(kw => normalizedText.includes(kw)).length;
-        const score1500 = keywords1500.filter(kw => normalizedText.includes(kw)).length;
-        const score500 = keywords500.filter(kw => normalizedText.includes(kw)).length;
+        const gasScore = keywordsGas.filter(kw => processedText.includes(kw)).length;
+        const score1500 = keywords1500.filter(kw => processedText.includes(kw)).length;
+        const score500 = keywords500.filter(kw => processedText.includes(kw)).length;
         
         const parsedNumbers = numbers.map(n => parseInt(n)).filter(n => n > 0);
         
@@ -779,7 +869,13 @@
         if (supply.items && Array.isArray(supply.items)) {
           supply.items.forEach(item => {
             if (stock.hasOwnProperty(item.product_id)) {
-              stock[item.product_id] += item.quantity || 0;
+              // Ajustes administrativos SOMAM ao estoque
+              if (supply.room_number && supply.room_number.startsWith('ADMIN')) {
+                stock[item.product_id] += item.quantity || 0;
+              } else {
+                // Abastecimentos de quartos SUBTRAEM do estoque
+                stock[item.product_id] -= item.quantity || 0;
+              }
             }
           });
         }
@@ -800,7 +896,9 @@
       });
 
       const existingAlert = document.getElementById('orderAlert');
-      if (lowStockProducts.length > 0 && !existingAlert) {
+      
+      // Só mostra alerta se ainda não atingiu o limite diário de 2 vezes
+      if (lowStockProducts.length > 0 && !existingAlert && shouldShowAlert()) {
         showOrderAlert(lowStockProducts, stock);
       } else if (lowStockProducts.length === 0 && existingAlert) {
         existingAlert.remove();
@@ -905,6 +1003,8 @@
       const alert = document.getElementById('orderAlert');
       if (alert) {
         alert.remove();
+        // Registrar que o alerta foi fechado
+        recordAlertDismissal();
       }
     }
 
@@ -936,7 +1036,7 @@
         orderText += `   Sugerido: ${suggested} unidades\n\n`;
       });
 
-      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━���━\n';
+      orderText += '━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
       orderText += 'Gerado automaticamente pelo sistema';
 
       const modal = document.createElement('div');
@@ -1051,7 +1151,7 @@ ${orderText}
 
     async function addNewProduct() {
       const name = document.getElementById('newProductName').value.trim();
-      const emoji = document.getElementById('newProductEmoji').value.trim() || '��';
+      const emoji = document.getElementById('newProductEmoji').value.trim() || '📦';
       const quantity = parseInt(document.getElementById('newProductQuantity').value) || 0;
 
       if (!name) {
@@ -1371,11 +1471,16 @@ ${orderText}
         return;
       }
 
-      // Calcular totais por produto
+      // Calcular totais por produto - APENAS ABASTECIMENTOS DE QUARTOS REAIS
       const totals = {};
       customProducts.forEach(p => totals[p.id] = 0);
 
       todaySupplies.forEach(supply => {
+        // Ignorar ajustes administrativos no relatório do dia
+        if (supply.room_number && supply.room_number.startsWith('ADMIN')) {
+          return;
+        }
+        
         if (supply.items && Array.isArray(supply.items)) {
           supply.items.forEach(item => {
             if (totals.hasOwnProperty(item.product_id)) {
@@ -1384,6 +1489,11 @@ ${orderText}
           });
         }
       });
+
+      // Filtrar apenas abastecimentos de quartos reais (não administrativos)
+      const roomSupplies = todaySupplies.filter(supply => 
+        !supply.room_number.startsWith('ADMIN')
+      );
 
       // Resumo geral
       const summaryHTML = `
@@ -1404,14 +1514,15 @@ ${orderText}
           </div>
           <div class="mt-4 pt-4 border-t-2 border-indigo-200 text-center">
             <p class="text-sm text-gray-600">
-              <span class="font-bold text-indigo-900">${todaySupplies.length}</span> abastecimentos realizados hoje
+              <span class="font-bold text-indigo-900">${roomSupplies.length}</span> abastecimentos realizados hoje
             </p>
           </div>
         </div>
       `;
 
       // Detalhamento por quarto
-      const sortedSupplies = [...todaySupplies].sort((a, b) => 
+
+      const sortedSupplies = [...roomSupplies].sort((a, b) => 
         new Date(b.timestamp) - new Date(a.timestamp)
       );
 
@@ -1419,7 +1530,7 @@ ${orderText}
         <div>
           <h3 class="text-lg font-bold text-gray-800 mb-4">📋 Detalhamento por Quarto</h3>
           <div class="space-y-3">
-            ${sortedSupplies.map(supply => {
+            ${sortedSupplies.length === 0 ? '<p class="text-gray-500 text-center py-4">Nenhum abastecimento de quarto registrado hoje</p>' : sortedSupplies.map(supply => {
               const date = new Date(supply.timestamp);
               const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
               
@@ -1461,16 +1572,21 @@ ${orderText}
         return supplyDate.getTime() === today.getTime();
       });
 
-      if (todaySupplies.length === 0) {
-        showToast('Nenhum abastecimento registrado hoje', 'error');
+      // Filtrar apenas abastecimentos de quartos reais
+      const roomSupplies = todaySupplies.filter(supply => 
+        !supply.room_number.startsWith('ADMIN')
+      );
+
+      if (roomSupplies.length === 0) {
+        showToast('Nenhum abastecimento de quarto registrado hoje', 'error');
         return;
       }
 
-      // Calcular totais
+      // Calcular totais - APENAS DE QUARTOS REAIS
       const totals = {};
       customProducts.forEach(p => totals[p.id] = 0);
 
-      todaySupplies.forEach(supply => {
+      roomSupplies.forEach(supply => {
         if (supply.items && Array.isArray(supply.items)) {
           supply.items.forEach(item => {
             if (totals.hasOwnProperty(item.product_id)) {
@@ -1480,7 +1596,7 @@ ${orderText}
         }
       });
 
-      const sortedSupplies = [...todaySupplies].sort((a, b) => 
+      const sortedSupplies = [...roomSupplies].sort((a, b) => 
         new Date(a.timestamp) - new Date(b.timestamp)
       );
 
@@ -1642,7 +1758,7 @@ ${orderText}
                 }).join('')}
               </div>
               <div class="summary-footer">
-                Total de ${todaySupplies.length} abastecimentos realizados
+                Total de ${roomSupplies.length} abastecimentos realizados
               </div>
             </div>
 
@@ -1932,5 +2048,5 @@ ${orderText}
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a385e67c11bf61f',t:'MTc2Mzk4MTY3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a38c6a39055f61f',t:'MTc2Mzk4NTk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
